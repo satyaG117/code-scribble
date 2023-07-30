@@ -1,0 +1,10 @@
+.main-editor-container{
+    width: 100%;
+    height: 84.4vh;
+    margin: 0;
+}
+
+.editor-container {
+    height: inherit;
+}
+  

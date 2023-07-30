@@ -1,0 +1,9 @@
+.text-input{
+    background-color: rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.text-input:focus{
+    background-color: rgba(0, 0, 0, 0.15);
+    
+}

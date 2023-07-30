@@ -1,0 +1,11 @@
+:root{
+  --dark-blue : #1f1f3c;
+}
+
+.bg-dark-blue{
+  background-color: var(--dark-blue);
+}
+
+.shadow{
+  box-shadow: 3px 3px 10px 3px rgba(0, 0, 0, 0.268);
+}
