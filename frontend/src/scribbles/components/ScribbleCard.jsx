@@ -19,7 +19,7 @@ export default function ScribbleCard(props) {
 
             <div className="card-body">
                 <h5 className="card-title">{props.title}</h5>
-                <Link to={`/profile/${props.authorId}`}>{props.authorName}</Link>
+                {props.authorName && (<Link to={`/profile/${props.authorId}`}>{props.authorName}</Link>)}
                 <hr />
                 <p className="card-text">{props.description.length > 100 ? props.description.slice(0, 100) + "..." : props.description}</p>
                 {props.forkedFrom && (<div><span>Forked from </span><Link to={`/scribbles/${props.forkedFrom}`}>here</Link></div>)}

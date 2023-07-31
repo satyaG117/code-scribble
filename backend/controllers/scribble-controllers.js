@@ -141,12 +141,12 @@ module.exports.updateCode = async (req, res, next) => {
 }
 
 module.exports.forkScribble = async (req, res, next) => {
-    const {scribbleId} = req.params;
-    let scribble , newScribble;
+    const { scribbleId } = req.params;
+    let scribble, newScribble;
     try {
         scribble = await Scribble.findById(scribbleId);
         // create a copy and delete necessary fields
-        let copiedScribble = {...scribble.toObject()};
+        let copiedScribble = { ...scribble.toObject() };
         delete copiedScribble._id;
         delete copiedScribble.createdAt;
         delete copiedScribble.lastEditedAt;
@@ -161,9 +161,24 @@ module.exports.forkScribble = async (req, res, next) => {
         await newScribble.save();
     } catch (err) {
         console.log(err);
-        return next(new HttpError(500 , "Couldn't fork scribble"));
+        return next(new HttpError(500, "Couldn't fork scribble"));
     }
 
-    res.status(201).json({scribbleId : newScribble._id , message : 'Fork successful'});
+    res.status(201).json({ scribbleId: newScribble._id, message: 'Fork successful' });
 
+}
+
+module.exports.getScribblesByUserId = async (req, res, next) => {
+    const { userId } = req.params;
+    let scribbles;
+    try {
+        scribbles = await Scribble.find({ author: userId });
+        if (!scribbles) {
+            return next(new HttpError(404, 'No data found'));
+        }
+    } catch (err) {
+        return next(new HttpError(500, "Couldn't fork scribble"));
+    }
+
+    res.status(200).json({scribbles});
 }
