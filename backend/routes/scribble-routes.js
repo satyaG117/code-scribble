@@ -28,4 +28,6 @@ router.patch('/:scribbleId/update-code',isLoggedIn , validateInputs(codeSchema),
 
 router.post('/:scribbleId/fork',isLoggedIn,scribbleControllers.forkScribble)
 
+router.get('/user/:userId',scribbleControllers.getScribblesByUserId);
+
 module.exports = router; 

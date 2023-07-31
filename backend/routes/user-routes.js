@@ -10,4 +10,6 @@ router.post('/signup',validateInputs(signupSchema),userControllers.signup);
 
 router.post('/login',validateInputs(loginSchema),userControllers.login);
 
+router.get('/profile/:userId',userControllers.getUserProfile);
+
 module.exports = router;

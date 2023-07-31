@@ -15,7 +15,7 @@ export default function ViewScribble() {
 
     const { scribbleId } = useParams();
     const auth = useContext(AuthContext);
-    const [scribble, setScribble] = useState({});
+    const [scribble, setScribble] = useState(null);
     const [isDeleteModalVisible , setIsDeleteModalVisible] = useState(false);
 
     const { sendRequest, isLoading, error ,clearError} = useFetch()
@@ -33,7 +33,7 @@ export default function ViewScribble() {
             }
         }
         fetchScribble()
-    }, [])
+    }, [scribbleId])
 
     useEffect(()=>{
         if(error){

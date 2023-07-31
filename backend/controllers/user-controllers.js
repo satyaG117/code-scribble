@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 const User = require("../models/user");
+const Scribble = require("../models/scribble");
 const HttpError = require("../utils/HttpError");
 
 const SALT_ROUNDS = 12;
@@ -102,4 +103,27 @@ module.exports.login = async (req, res, next) => {
             token: token
         }
     )
+}
+
+
+module.exports.getUserProfile = async (req, res, next) => {
+    const { userId } = req.params;
+    let user , scribbleCount;
+    try {
+        user = await User.findById(userId, '-password');
+        if (!user) {
+            return next(new HttpError(404, 'User not found'));
+        }
+        scribbleCount = await Scribble.countDocuments({author : userId});
+    } catch (err) {
+        return next(new HttpError(500, 'Server error'));
+    }
+
+    // res.status(200).json({user : { ...user , scribbleCount }});
+    res.status(200).json({user : {
+        _id : user._id,
+        name : user.name,
+        email : user.email,
+        scribbleCount
+    }});
 }
