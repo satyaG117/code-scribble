@@ -4,6 +4,9 @@ const mongoose = require("mongoose")
 const Scribble = require("../models/scribble");
 const HttpError = require("../utils/HttpError");
 
+const MAX_LIMIT = 6, DEFAULT_PAGE = 1;
+
+
 module.exports.createNewScribble = async (req, res, next) => {
     let newScribble, title, description;
     try {
@@ -31,9 +34,23 @@ module.exports.createNewScribble = async (req, res, next) => {
 
 module.exports.getScribbles = async (req, res, next) => {
     let scribbles;
+    console.log(req.query);
+    let limit  = parseInt(req.query.limit);
+    let page = parseInt(req.query.page);
+    // if limit is not defined or exceeds max limit then assign max limit
+    limit = !limit || (limit > MAX_LIMIT) ? MAX_LIMIT : limit;
+    // if page is not defined then assign default value
+    page = !page || page < 1 ? DEFAULT_PAGE : page;
+
     try {
-        scribbles = await Scribble.find({}).select('-__v').populate('author', '-password -createdAt -__v');
-        if (!scribbles) {
+        scribbles = await Scribble.find({})
+            .select('-__v')
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .skip((page - 1) * limit)
+            .populate('author', '-password -createdAt -__v');
+
+        if (scribbles.length == 0) {
             return next(new HttpError(404, "Scribbles not found"));
         }
     } catch (err) {
@@ -141,12 +158,12 @@ module.exports.updateCode = async (req, res, next) => {
 }
 
 module.exports.forkScribble = async (req, res, next) => {
-    const {scribbleId} = req.params;
-    let scribble , newScribble;
+    const { scribbleId } = req.params;
+    let scribble, newScribble;
     try {
         scribble = await Scribble.findById(scribbleId);
         // create a copy and delete necessary fields
-        let copiedScribble = {...scribble.toObject()};
+        let copiedScribble = { ...scribble.toObject() };
         delete copiedScribble._id;
         delete copiedScribble.createdAt;
         delete copiedScribble.lastEditedAt;
@@ -161,9 +178,9 @@ module.exports.forkScribble = async (req, res, next) => {
         await newScribble.save();
     } catch (err) {
         console.log(err);
-        return next(new HttpError(500 , "Couldn't fork scribble"));
+        return next(new HttpError(500, "Couldn't fork scribble"));
     }
 
-    res.status(201).json({scribbleId : newScribble._id , message : 'Fork successful'});
+    res.status(201).json({ scribbleId: newScribble._id, message: 'Fork successful' });
 
 }
