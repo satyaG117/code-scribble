@@ -34,8 +34,7 @@ module.exports.createNewScribble = async (req, res, next) => {
 
 module.exports.getScribbles = async (req, res, next) => {
     let scribbles;
-    console.log(req.query);
-    let limit  = parseInt(req.query.limit);
+    let limit = parseInt(req.query.limit);
     let page = parseInt(req.query.page);
     // if limit is not defined or exceeds max limit then assign max limit
     limit = !limit || (limit > MAX_LIMIT) ? MAX_LIMIT : limit;
@@ -58,6 +57,39 @@ module.exports.getScribbles = async (req, res, next) => {
     }
 
     res.status(200).json({ scribbles })
+}
+
+module.exports.searchScribbles = async (req, res, next) => {
+    let scribbles;
+    let limit = parseInt(req.query.limit);
+    let page = parseInt(req.query.page);
+    let term = req.query.term;
+    limit = !limit || (limit > MAX_LIMIT) ? MAX_LIMIT : limit;
+    page = !page || page < 1 ? DEFAULT_PAGE : page;
+
+    if (!term) {
+        return next(new HttpError(404, "Not found"));
+    }
+
+    try {
+        scribbles = await Scribble.find({
+            title: { $regex: term, $options: 'i' },
+        })
+            .select('-__v')
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .skip((page - 1) * limit)
+            .populate('author', '-password -createdAt -__v');
+
+        if (scribbles.length == 0) {
+            return next(new HttpError(404, "Scribbles not found"));
+        }
+    } catch (err) {
+        return next(new HttpError(500, "Error fetching scribbles"));
+    }
+
+    res.status(200).json({ scribbles })
+
 }
 
 module.exports.updateScribble = async (req, res, next) => {
@@ -197,5 +229,6 @@ module.exports.getScribblesByUserId = async (req, res, next) => {
         return next(new HttpError(500, "Couldn't fork scribble"));
     }
 
-    res.status(200).json({scribbles});
+    res.status(200).json({ scribbles });
 }
+

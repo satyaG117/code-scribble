@@ -17,6 +17,7 @@ import NoAuthOnlyRoutes from './shared/components/routes/NoAuthOnlyRoutes';
 import { ToastContainer } from 'react-toastify';
 import EditScribble from './scribbles/pages/EditScribble';
 import Profile from './users/pages/Profile';
+import SearchScribble from './scribbles/pages/SearchScribble';
 
 function App() {
 
@@ -38,6 +39,7 @@ function App() {
           </Route>
           <Route path='/scribbles' element={<Scribbles />} />
           <Route path='/scribbles/:scribbleId' element={<ViewScribble />} />
+          <Route path='/scribbles/search' element={<SearchScribble />} />
           <Route path='/profile/:userId' element={<Profile />} />
 
         </Routes>

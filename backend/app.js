@@ -36,7 +36,7 @@ async function main() {
 main().catch(err => console.log(err));
 
 // middleware to purposefully delay response for testing purposes
-app.use(delayMiddleware);
+// app.use(delayMiddleware);
 
 app.use('/api/users',userRoutes);
 app.use('/api/scribbles',scribbleRoutes);

@@ -12,6 +12,9 @@ router.post('/',isLoggedIn,validateInputs(scribbleSchema),scribbleControllers.cr
 // get data
 router.get('/',scribbleControllers.getScribbles);
 
+// search 
+router.get('/search',scribbleControllers.searchScribbles);
+
 //edit general details
 router.patch('/:scribbleId',isLoggedIn,validateInputs(scribbleSchema),scribbleControllers.updateScribble);
 
