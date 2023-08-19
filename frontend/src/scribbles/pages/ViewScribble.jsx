@@ -27,7 +27,7 @@ export default function ViewScribble() {
                 console.log(scribbleId)
                 responseData = await sendRequest(`http://localhost:8000/api/scribbles/${scribbleId}`);
                 setScribble(responseData.scribble);
-                console.log(responseData.scribble);
+                console.log(responseData);
             } catch (err) {
                 // clearError();
             }
@@ -126,7 +126,7 @@ export default function ViewScribble() {
                 <div className="card mt-3 bg-dark-blue shadow">
                     <div className="card-header">
                         <h4 className="card-title">{scribble.title}</h4>
-                        {scribble.author && (<><span className="text-emphasis">Author : </span> <Link to={`/profile/${scribble.author._id}`}> {scribble.author.name}</Link></>)}
+                        {scribble.authorData && (<><span className="text-emphasis">Author : </span> <Link to={`/profile/${scribble.authorData._id}`}> {scribble.authorData.name}</Link></>)}
                         {scribble.forkedFrom && (<div><span>Forked from : </span><Link to={`/scribbles/${scribble.forkedFrom}`} target="_blank">here</Link></div>)}
                     </div>
                     <div className="card-body">

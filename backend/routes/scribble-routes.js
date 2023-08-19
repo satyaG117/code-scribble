@@ -33,4 +33,6 @@ router.post('/:scribbleId/fork',isLoggedIn,scribbleControllers.forkScribble)
 
 router.get('/user/:userId',scribbleControllers.getScribblesByUserId);
 
+router.post(':scribbleId/star',isLoggedIn , scribbleControllers.toggleStar);
+
 module.exports = router; 
