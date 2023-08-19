@@ -3,6 +3,7 @@ const mongoose = require("mongoose")
 
 const Scribble = require("../models/scribble");
 const HttpError = require("../utils/HttpError");
+const Star = require("../models/star");
 
 const MAX_LIMIT = 6, DEFAULT_PAGE = 1;
 
@@ -42,12 +43,59 @@ module.exports.getScribbles = async (req, res, next) => {
     page = !page || page < 1 ? DEFAULT_PAGE : page;
 
     try {
-        scribbles = await Scribble.find({})
-            .select('-__v')
-            .sort({ createdAt: -1 })
-            .limit(limit)
-            .skip((page - 1) * limit)
-            .populate('author', '-password -createdAt -__v');
+        // scribbles = await Scribble.find({})
+        //     .select('-__v')
+        //     .sort({ createdAt: -1 })
+        //     .limit(limit)
+        //     .skip((page - 1) * limit)
+        //     .populate('author', '-password -createdAt -__v');
+
+        scribbles = await Scribble.aggregate([
+            {
+                $lookup: {
+                    from: 'stars',
+                    localField: '_id',
+                    foreignField: 'scribble',
+                    as: 'stars'
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users', // Use the name of the users collection
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'authorData',
+                },
+            },
+            {
+                $unwind: '$authorData'
+            },
+            {
+                $addFields: {
+                    starCount: { $size: '$stars' },
+                }
+            },
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            },
+            {
+                $skip: (page - 1) * limit
+            },
+            {
+                $limit: limit
+            },
+
+            {
+                $project: {
+                    stars: 0,
+                    'authorData.password': 0
+                }
+            }
+        ])
+
+        console.log(scribbles)
 
         if (scribbles.length == 0) {
             return next(new HttpError(404, "Scribbles not found"));
@@ -72,15 +120,58 @@ module.exports.searchScribbles = async (req, res, next) => {
     }
 
     try {
-        scribbles = await Scribble.find({
-            title: { $regex: term, $options: 'i' },
-        })
-            .select('-__v')
-            .sort({ createdAt: -1 })
-            .limit(limit)
-            .skip((page - 1) * limit)
-            .populate('author', '-password -createdAt -__v');
+        scribbles = await Scribble.aggregate([
+            {
+                $match: {
+                    title: {
+                        $regex: term,
+                        $options: 'i',
+                    },
+                }
+            },
+            {
+                $lookup: {
+                    from: 'stars',
+                    localField: '_id',
+                    foreignField: 'scribble',
+                    as: 'stars'
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users', // Use the name of the users collection
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'authorData',
+                },
+            },
+            {
+                $unwind: '$authorData'
+            },
+            {
+                $addFields: {
+                    starCount: { $size: '$stars' },
+                }
+            },
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            },
+            {
+                $skip: (page - 1) * limit
+            },
+            {
+                $limit: limit
+            },
 
+            {
+                $project: {
+                    stars: 0,
+                    'authorData.password': 0
+                }
+            }
+        ])
         if (scribbles.length == 0) {
             return next(new HttpError(404, "Scribbles not found"));
         }
@@ -150,14 +241,52 @@ module.exports.getScribbleById = async (req, res, next) => {
     let scribble;
     const { scribbleId } = req.params;
     try {
-        scribble = await Scribble.findById(scribbleId).populate('author', '-password -createdAt -__v');
-        if (!scribble) {
+        // scribble = await Scribble.findById(scribbleId).populate('author', '-password -createdAt -__v');
+        scribble = await Scribble.aggregate([
+            {
+                $match: {
+                    _id: new mongoose.Types.ObjectId(scribbleId)
+                }
+            },
+            {
+                $lookup: {
+                    from: 'stars',
+                    localField: '_id',
+                    foreignField: 'scribble',
+                    as: 'stars'
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users', // Use the name of the users collection
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'authorData',
+                },
+            },
+            {
+                $unwind: '$authorData'
+            },
+            {
+                $addFields: {
+                    starCount: { $size: '$stars' },
+                }
+            },
+            {
+                $project: {
+                    stars: 0,
+                    'authorData.password': 0
+                }
+            }
+        ])
+        if (scribble.length == 0) {
             return next(new HttpError(404, "Scribble not found"));
         }
     } catch (err) {
+        console.log(err)
         return next(new HttpError(500, "Error while fetching data"));
     }
-    res.status(200).json({ scribble });
+    res.status(200).json({ scribble: { ...scribble[0] } });
 }
 
 module.exports.updateCode = async (req, res, next) => {
@@ -219,16 +348,114 @@ module.exports.forkScribble = async (req, res, next) => {
 
 module.exports.getScribblesByUserId = async (req, res, next) => {
     const { userId } = req.params;
+
+    let limit = parseInt(req.query.limit);
+    let page = parseInt(req.query.page);
+    // if limit is not defined or exceeds max limit then assign max limit
+    limit = !limit || (limit > MAX_LIMIT) ? MAX_LIMIT : limit;
+    // if page is not defined then assign default value
+    page = !page || page < 1 ? DEFAULT_PAGE : page;
     let scribbles;
     try {
-        scribbles = await Scribble.find({ author: userId });
+        scribbles = await Scribble.aggregate([
+            {
+                $match: {
+                    author: new mongoose.Types.ObjectId(userId)
+                }
+            },
+            {
+                $lookup: {
+                    from: 'stars',
+                    localField: '_id',
+                    foreignField: 'scribble',
+                    as: 'stars'
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users', // Use the name of the users collection
+                    localField: 'author',
+                    foreignField: '_id',
+                    as: 'authorData',
+                },
+            },
+            {
+                $unwind: '$authorData'
+            },
+            {
+                $addFields: {
+                    starCount: { $size: '$stars' },
+                }
+            },
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            },
+            {
+                $skip: (page - 1) * limit
+            },
+            {
+                $limit: limit
+            },
+
+            {
+                $project: {
+                    stars: 0,
+                    'authorData.password': 0
+                }
+            }
+        ])
         if (!scribbles) {
             return next(new HttpError(404, 'No data found'));
         }
     } catch (err) {
-        return next(new HttpError(500, "Couldn't fork scribble"));
+        console.log(err);
+        return next(new HttpError(500, "Server error"));
     }
 
     res.status(200).json({ scribbles });
 }
 
+module.exports.toggleStar = async (req, res, next) => {
+    const { scribbleId } = req.params;
+    try {
+        const scribble = await Scribble.findById(scribbleId);
+        if (!scribble) {
+            return next(new HttpError(404, "Scribble not found"));
+        }
+
+        const star = await Star.findOne({
+            user: req.userData.userId,
+            scribble: scribbleId
+        })
+
+        // if we found it then delete it
+        if (star) {
+            await Star.deleteOne({
+                user: req.userData.userId,
+                scribble: scribbleId
+            })
+
+            return res.status(200).json({
+                message: 'Unstarred successfully'
+            })
+        } else {
+            // create a new star if we don't have one yet
+            const star = new Star({
+                user: req.userData.userId,
+                scribble: scribbleId
+            })
+
+            await star.save();
+
+            return res.status(201).json({
+                message: 'Starred successfully'
+            })
+        }
+
+
+    } catch (err) {
+        next(new HttpError(500, "Server error"));
+    }
+}

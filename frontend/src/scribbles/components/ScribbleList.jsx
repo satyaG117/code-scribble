@@ -12,12 +12,13 @@ export default function ScribbleList(props) {
                                 id={scribble._id}
                                 title={scribble.title}
                                 description={scribble.description}
-                                authorName={scribble.author.name}
-                                authorId={scribble.author._id}
+                                authorName={scribble.authorData.name}
+                                authorId={scribble.authorData._id}
                                 forkedFrom={scribble.forkedFrom}
                                 html={scribble.html}
                                 css={scribble.css}
                                 js={scribble.js}
+                                starCount={scribble.starCount}
                             />
                         </div>
                     )
