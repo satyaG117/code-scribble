@@ -221,7 +221,7 @@ module.exports.deleteScribble = async (req, res, next) => {
         targetScribble = await Scribble.findById(scribbleId);
 
         if (!targetScribble) {
-            return next(new HttpError(404, "Scribble Not found , update failed"));
+            return next(new HttpError(404, "Scribble Not found , delete failed"));
         }
 
         if (targetScribble.author.toString() !== req.userData.userId) {
@@ -458,4 +458,27 @@ module.exports.toggleStar = async (req, res, next) => {
     } catch (err) {
         next(new HttpError(500, "Server error"));
     }
+}
+
+module.exports.hasUserStarred = async(req , res , next) =>{
+    let star;
+    const {scribbleId} = req.params;
+    try{
+        star = await Star.findOne({
+            user : req.userData.userId,
+            scribble : scribbleId
+        })
+
+        if(star){
+            return res.status(200).json({
+                hasStarred : true
+            })
+        }
+    }catch(err){
+        return next(new HttpError(500))
+    }
+
+    return res.status(200).json({
+        hasStarred : false
+    })
 }

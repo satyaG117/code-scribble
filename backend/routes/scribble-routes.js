@@ -29,10 +29,12 @@ router.get('/:scribbleId',scribbleControllers.getScribbleById);
 // edit the code only html , css , js
 router.patch('/:scribbleId/update-code',isLoggedIn , validateInputs(codeSchema),scribbleControllers.updateCode);
 
-router.post('/:scribbleId/fork',isLoggedIn,scribbleControllers.forkScribble)
-
 router.get('/user/:userId',scribbleControllers.getScribblesByUserId);
 
-router.post(':scribbleId/star',isLoggedIn , scribbleControllers.toggleStar);
+router.post('/:scribbleId/fork',isLoggedIn,scribbleControllers.forkScribble)
+
+router.post('/:scribbleId/star',isLoggedIn , scribbleControllers.toggleStar);
+
+router.get('/:scribbleId/checkStar',isLoggedIn , scribbleControllers.hasUserStarred);
 
 module.exports = router; 
