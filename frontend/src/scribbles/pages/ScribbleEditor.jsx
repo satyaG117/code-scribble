@@ -123,7 +123,7 @@ export default function ScribbleEditor() {
                 setLastSavedCss(responseData.scribble.js);
                 setLastSavedJs(responseData.scribble.js);
 
-                setAuthorId(responseData.scribble.author._id);
+                setAuthorId(responseData.scribble.authorData._id);
                 setTitle(responseData.scribble.title);
             } catch (err) {
 

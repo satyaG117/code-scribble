@@ -1,4 +1,8 @@
 const mongoose = require('mongoose');
+
+const Star = require('./star');
+const HttpError = require('../utils/HttpError');
+
 const { Schema } = mongoose;
 
 const scribbleSchema = new Schema({
@@ -45,6 +49,18 @@ const scribbleSchema = new Schema({
 scribbleSchema.pre('save', function(next){
     this.lastEditedAt = new Date();
     next();
+})
+
+scribbleSchema.post('findOneAndDelete',async function(doc , next){
+    try{
+        if(doc)
+            await Star.deleteMany({scribble : doc._id});
+    }catch(err){
+        return next(new HttpError(500 , "Server error"));
+    }
+
+    next();
+    
 })
 
 module.exports = mongoose.model('Scribble', scribbleSchema);
